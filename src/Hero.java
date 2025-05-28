@@ -25,4 +25,15 @@ public class Hero {
     public void heal(int amount) {
         hp = Math.min(maxHp, hp + amount);
     }
+
+    public void takeDamage(int dmg) {
+        hp -= dmg;
+        if (hp <= 0) {
+            hp = 0;
+            System.out.println("당신은 쓰러졌습니다. 게임 오버.");
+            System.exit(0);
+        }
+    }
+
+
 }
