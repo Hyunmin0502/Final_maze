@@ -2,16 +2,16 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        Map<String, Room> visitedRooms = new HashMap<>(); // 방문한 모든 방을 추적
-        Room room = new Room("room1.csv");
+        String runFolderPath = GameSetup.setupNewRunFolder();
+        Room room = new Room(runFolderPath, "room1.csv");
         Hero hero = new Hero();
         Scanner scanner = new Scanner(System.in);
 
         room.placeHero(hero);
 
+
         while (true) {
             room.displayRoomWithStatus(hero);
-
             String input = scanner.nextLine().trim().toLowerCase();
             if (input.equals("q")) {
                 room.saveRoomToCSV();
@@ -31,6 +31,7 @@ public class Main {
                     }
                 } else if (cmd == 'a') {
                     room.handleAttack(hero);
+
                 } else {
                     System.out.println("Invalid input.");
                 }

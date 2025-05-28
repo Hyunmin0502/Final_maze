@@ -9,10 +9,13 @@ public class Room {
     private int rows;
     private int cols;
     private String filename;
+    private String basePath;
 
-    public Room(String filename) {
+
+    public Room(String basePath, String filename) {
+        this.basePath = basePath;
         this.filename = filename;
-        loadRoomFromCSV("rooms/" + filename);  // 예: "room1.csv"
+        loadRoomFromCSV(basePath + File.separator + filename);
     }
 
     public void loadRoomFromCSV(String path) {
@@ -40,14 +43,14 @@ public class Room {
     public void displayRoomWithStatus(Hero hero) {
         System.out.println("AdventureGame");
         System.out.printf("HP: %d/%d | Weapon: %s | Key: %s\n",
-            hero.getHp(),
-            hero.getMaxHp(),
-            hero.getWeapon() == null ? "None" : hero.getWeapon().getName(),
-            hero.hasKey() ? "Yes" : "No"
+                hero.getHp(),
+                hero.getMaxHp(),
+                hero.getWeapon() == null ? "None" : hero.getWeapon().getName(),
+                hero.hasKey() ? "Yes" : "No"
         );
-    
+
         printWall();
-    
+
         for (int i = 0; i < rows; i++) {
             System.out.print("|");
             for (int j = 0; j < cols; j++) {
@@ -56,19 +59,20 @@ public class Room {
             }
             System.out.println("|");
         }
-    
+
         printWall();
-    
+
         System.out.print("Enter command (u/d/r/l to move, a to attack, q to quit): ");
-    }    
+    }
 
     private String renderCell(String cell) {
         cell = cell.trim();
-    
+
         if (cell.startsWith("G")) return "♙";
         if (cell.startsWith("O")) return "♞";
         if (cell.startsWith("T")) return "♖";
-    
+        if (cell.startsWith("d")) return "☗";
+
         return switch (cell) {
             case "@" -> "☻";
             case "m" -> "♥";
@@ -76,12 +80,12 @@ public class Room {
             case "S" -> "|";
             case "W" -> "†";
             case "X" -> "⚔";
-            case "d" -> "☗";
+            case "D" -> "\uD83D\uDEAA";
             case "*" -> "⛁";
             default -> " ";
         };
     }
-    
+
 
     public void placeHero(Hero hero) {
         boolean found = false;
@@ -96,7 +100,7 @@ public class Room {
             }
             if (found) break;
         }
-    
+
         if (!found) {
             // 2. [0][0]이 비어 있다면
             if (grid[0][0].isEmpty()) {
@@ -119,7 +123,7 @@ public class Room {
     }
 
     public void saveRoomToCSV() {
-        try (FileWriter writer = new FileWriter("rooms/" + filename)) {
+        try (FileWriter writer = new FileWriter(basePath + File.separator + filename)) {
             writer.write(rows + "," + cols + "\n");
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < cols; j++) {
@@ -132,6 +136,7 @@ public class Room {
             System.out.println("Error saving room: " + e.getMessage());
         }
     }
+
 
     public void displayRoom() {
         System.out.println("Room: " + filename);
@@ -182,7 +187,7 @@ public class Room {
         int currentCol = hero.getCol();
         int newRow = currentRow;
         int newCol = currentCol;
-    
+
         switch (direction) {
             case 'u' -> newRow--;
             case 'd' -> newRow++;
@@ -193,13 +198,13 @@ public class Room {
                 return null;
             }
         }
-    
+
         // 범위 검사
         if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
             System.out.println("You hit the wall!");
             return null;
         }
-    
+
         // 이동할 자리에 몬스터가 있으면 막기
         String target = grid[newRow][newCol];
         if (target.startsWith("G") || target.startsWith("O") || target.startsWith("T")) {
@@ -226,7 +231,7 @@ public class Room {
             System.out.println("다음 방으로 이동합니다: " + nextRoomFile);
 
             saveRoomToCSV();  // 현재 방 상태 저장
-            Room nextRoom = new Room(nextRoomFile);  // 새 방 로드
+            Room nextRoom = new Room(basePath, nextRoomFile);  // run 폴더 안에서 찾기
             nextRoom.placeHero(hero);  // 새 방에서 히어로 위치 배치
             // Main 쪽에서 현재 room 객체를 nextRoom으로 바꿔야 함
             return nextRoom;  // 방 이동했으니까 이후 코드 생략
@@ -347,8 +352,8 @@ public class Room {
 
             if (monster != null) {
                 monster.hp = hp;
-                System.out.println("인접한 " + monster.getClass().getSimpleName() + " 발견! HP: " + hp);
-                System.out.print("공격(a) 또는 무시(x)? ");
+                System.out.println(monster.getClass().getSimpleName() + " HP: " + hp);
+                System.out.print("attack(a) or not(x)? ");
 
                 Scanner scanner = new Scanner(System.in);
                 String choice = scanner.nextLine().trim().toLowerCase();
@@ -370,6 +375,7 @@ public class Room {
                         }
                     } else {
                         grid[newRow][newCol] = target.split(":")[0] + ":" + monster.getHp();  // 예: G:2
+                        System.out.println("몬스터가 살아남았습니다. 남은 HP: " + monster.getHp());
                     }
                 }
                 return;  // 한 마리만 공격 가능, 한 번만 처리
@@ -379,6 +385,6 @@ public class Room {
         System.out.println("주변에 공격할 몬스터가 없습니다.");
     }
 
-}
 
+}
 
