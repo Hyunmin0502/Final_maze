@@ -23,9 +23,9 @@ public class Main {
                 if ("udlr".indexOf(cmd) != -1) {
                     Room nextRoom = room.moveHero(cmd, hero);
                     if (nextRoom != null) {
-                        room = nextRoom;  // 방 교체 처리
+                        room = nextRoom;  // to the next room
                     }
-                    // 이동 후 주변에 몬스터가 있을 때만 공격 메뉴 띄움
+                    // only after movement, there exists monsters
                     if (room.isAdjacentToMonster(hero)) {
                         room.handleAttack(hero);
                     }

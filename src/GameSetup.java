@@ -8,16 +8,16 @@ public class GameSetup {
         String runsDir = "rooms/runs";
         File runsFolder = new File(runsDir);
         if (!runsFolder.exists()) {
-            runsFolder.mkdirs();  // ⚠ mkdir → mkdirs로, 중간 경로까지 생성하도록!
+            runsFolder.mkdirs();  // ⚠ Use mkdirs to create intermediate directories if needed
         }
 
-        // 예: run_20240528_1234 (날짜 + 시간)
+        // Example: run_20240528_1234 (date + time)
         String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String runFolderName = "run_" + timestamp;
         File runFolder = new File(runsFolder, runFolderName);
         runFolder.mkdir();
 
-        // rooms 폴더에서 복사
+        // Copy all .csv files from the rooms folder
         File roomsFolder = new File("rooms");
         File[] roomFiles = roomsFolder.listFiles((dir, name) -> name.endsWith(".csv"));
         if (roomFiles != null) {

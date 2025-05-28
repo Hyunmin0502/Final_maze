@@ -16,8 +16,4 @@ public class HealingPotion {
     public int getHealAmount() {
         return healAmount;
     }
-
-    public String getType() {
-        return type;
-    }
 }

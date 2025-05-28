@@ -11,7 +11,6 @@ public class Room {
     private String filename;
     private String basePath;
 
-
     public Room(String basePath, String filename) {
         this.basePath = basePath;
         this.filename = filename;
@@ -86,10 +85,9 @@ public class Room {
         };
     }
 
-
     public void placeHero(Hero hero) {
         boolean found = false;
-        // 1. @ 있는지 찾기
+        // 1. Check if '@' is already placed
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 if (grid[i][j].equals("@")) {
@@ -102,12 +100,12 @@ public class Room {
         }
 
         if (!found) {
-            // 2. [0][0]이 비어 있다면
+            // 2. If top-left is empty, place hero there
             if (grid[0][0].isEmpty()) {
                 grid[0][0] = "@";
                 hero.setPosition(0, 0);
             } else {
-                // 3. 랜덤 빈 칸 찾기
+                // 3. Otherwise, find a random empty spot
                 Random rand = new Random();
                 while (true) {
                     int r = rand.nextInt(rows);
@@ -137,23 +135,6 @@ public class Room {
         }
     }
 
-
-    public void displayRoom() {
-        System.out.println("Room: " + filename);
-        printWall();
-
-        for (int i = 0; i < rows; i++) {
-            System.out.print("|");
-            for (int j = 0; j < cols; j++) {
-                String content = grid[i][j].isEmpty() ? " " : grid[i][j];
-                System.out.printf("%-3s", content.length() == 1 ? content : "?");
-            }
-            System.out.println("|");
-        }
-
-        printWall();
-    }
-
     private void printWall() {
         System.out.print("+");
         for (int i = 0; i < cols; i++) {
@@ -162,26 +143,6 @@ public class Room {
         System.out.println("+");
     }
 
-    // getter/setter
-    public String[][] getGrid() {
-        return grid;
-    }
-
-    public String getTile(int row, int col) {
-        return grid[row][col];
-    }
-
-    public void setTile(int row, int col, String value) {
-        grid[row][col] = value;
-    }
-
-    public int getRows() {
-        return rows;
-    }
-
-    public int getCols() {
-        return cols;
-    }
     public Room moveHero(char direction, Hero hero) {
         int currentRow = hero.getRow();
         int currentCol = hero.getCol();
@@ -199,92 +160,85 @@ public class Room {
             }
         }
 
-        // 범위 검사
         if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols) {
             System.out.println("You hit the wall!");
             return null;
         }
 
-        // 이동할 자리에 몬스터가 있으면 막기
         String target = grid[newRow][newCol];
         if (target.startsWith("G") || target.startsWith("O") || target.startsWith("T")) {
             System.out.println("You can't move there.");
             return null;
         }
 
-        // Healing potion 처리
         if (target.equals("m") || target.equals("B")) {
             HealingPotion potion = new HealingPotion(target);
             if (hero.getHp() < hero.getMaxHp()) {
                 hero.heal(potion.getHealAmount());
                 System.out.println("You picked up a " + (target.equals("m") ? "Minor Flask" : "Big Flask") +
                         " and healed +" + potion.getHealAmount() + " HP!");
-                grid[newRow][newCol] = " ";  // 포션 먹으면 자리 비우기
+                grid[newRow][newCol] = " ";
             } else {
                 System.out.println("You're already fully healed. Potion remains.");
             }
         }
 
-        // door 처리
         if (target.startsWith("d:")) {
-            String nextRoomFile = target.substring(2); // "d:room2.csv" → "room2.csv"
-            System.out.println("다음 방으로 이동합니다: " + nextRoomFile);
+            String nextRoomFile = target.substring(2); // e.g., "d:room2.csv" → "room2.csv"
+            System.out.println("Moving to the next room: " + nextRoomFile);
 
-            saveRoomToCSV();  // 현재 방 상태 저장
-            Room nextRoom = new Room(basePath, nextRoomFile);  // run 폴더 안에서 찾기
-            nextRoom.placeHero(hero);  // 새 방에서 히어로 위치 배치
-            // Main 쪽에서 현재 room 객체를 nextRoom으로 바꿔야 함
-            return nextRoom;  // 방 이동했으니까 이후 코드 생략
+            saveRoomToCSV();
+            Room nextRoom = new Room(basePath, nextRoomFile);
+            nextRoom.placeHero(hero);
+            return nextRoom;
         }
 
         if (target.equals("D")) {
             if (hero.hasKey()) {
-                System.out.println("열쇠로 마스터 도어를 열고 탈출했습니다! 승리!");
-                System.exit(0);  // 프로그램 종료
+                System.out.println("You used the key and escaped through the master door. Victory!");
+                System.exit(0);
             } else {
-                System.out.println("마스터 도어는 잠겨 있습니다. 열쇠가 필요합니다.");
+                System.out.println("The master door is locked. You need a key.");
                 return null;
             }
         }
 
-        // 무기 처리
         if (target.equals("S") || target.equals("W") || target.equals("X")) {
             Weapon newWeapon;
             switch (target) {
                 case "S" -> newWeapon = new Weapon("Stick", 1);
                 case "W" -> newWeapon = new Weapon("Weak Sword", 2);
                 case "X" -> newWeapon = new Weapon("Strong Sword", 3);
-                default -> newWeapon = null;  // 안전용, 이론상 안 옴
+                default -> newWeapon = null;
             }
 
             if (hero.getWeapon() == null) {
                 hero.setWeapon(newWeapon);
-                System.out.println("새 무기 '" + newWeapon.getName() + "'를 획득했습니다! 데미지: " + newWeapon.getDamage());
+                System.out.println("You picked up a new weapon '" + newWeapon.getName() + "'! Damage: " + newWeapon.getDamage());
             } else {
-                System.out.println("기존 무기 '" + hero.getWeapon().getName() + "'가 있습니다. 교체하시겠습니까? (y/n)");
+                System.out.println("You already have '" + hero.getWeapon().getName() + "'. Replace it? (y/n)");
                 Scanner scanner = new Scanner(System.in);
                 String choice = scanner.nextLine().trim().toLowerCase();
 
                 if (choice.equals("y")) {
                     hero.setWeapon(newWeapon);
-                    System.out.println("무기를 '" + newWeapon.getName() + "'로 교체했습니다!");
+                    System.out.println("Weapon replaced with '" + newWeapon.getName() + "'.");
                 } else {
-                    System.out.println("기존 무기를 유지합니다.");
+                    System.out.println("Keeping the current weapon.");
                 }
             }
 
-            grid[newRow][newCol] = " ";  // 무기 칸 비우기
+            grid[newRow][newCol] = " ";
         }
 
-
-        // 이동 처리
-        grid[currentRow][currentCol] = " "; // 원래 위치 지우기
-        grid[newRow][newCol] = "@";         // 새 위치 표시
+        grid[currentRow][currentCol] = " ";
+        grid[newRow][newCol] = "@";
         hero.setPosition(newRow, newCol);
 
         return null;
     }
-    // 몬스터 입접 여부 판단
+
+    // Check if there is a monster adjacent to the hero
     public boolean isAdjacentToMonster(Hero hero) {
         int heroRow = hero.getRow();
         int heroCol = hero.getCol();
@@ -304,17 +258,16 @@ public class Room {
         return false;
     }
 
-    // 유저가 a 키를 눌렀을 때 실행됨.
+    // Handle attack when user presses 'a'
     public void handleAttack(Hero hero) {
         if (hero.getWeapon() == null) {
-            System.out.println("무기가 없어 공격할 수 없습니다!");
+            System.out.println("You have no weapon to attack!");
             return;
         }
 
         int heroRow = hero.getRow();
         int heroCol = hero.getCol();
 
-        // 상하좌우 검사
         int[][] directions = { {-1,0}, {1,0}, {0,-1}, {0,1} };
         for (int[] dir : directions) {
             int newRow = heroRow + dir[0];
@@ -329,25 +282,13 @@ public class Room {
 
             if (target.startsWith("G")) {
                 monster = new Goblin();
-                if (target.contains(":")) {
-                    hp = Integer.parseInt(target.split(":")[1]);
-                } else {
-                    hp = 3;  // 기본 Goblin HP
-                }
+                hp = target.contains(":") ? Integer.parseInt(target.split(":")[1]) : 3;
             } else if (target.startsWith("O")) {
                 monster = new Orc();
-                if (target.contains(":")) {
-                    hp = Integer.parseInt(target.split(":")[1]);
-                } else {
-                    hp = 8;  // 기본 Orc HP
-                }
+                hp = target.contains(":") ? Integer.parseInt(target.split(":")[1]) : 8;
             } else if (target.startsWith("T")) {
                 monster = new Troll();
-                if (target.contains(":")) {
-                    hp = Integer.parseInt(target.split(":")[1]);
-                } else {
-                    hp = 15;  // 기본 Troll HP
-                }
+                hp = target.contains(":") ? Integer.parseInt(target.split(":")[1]) : 15;
             }
 
             if (monster != null) {
@@ -362,29 +303,26 @@ public class Room {
                     monster.takeDamage(hero.getWeapon().getDamage());
                     hero.takeDamage(monster.getDamage());
 
-                    System.out.println("몬스터에게 " + hero.getWeapon().getDamage() + " 데미지를 입힘!");
-                    System.out.println("몬스터에게서 " + monster.getDamage() + " 데미지를 받음!");
+                    System.out.println("You dealt " + hero.getWeapon().getDamage() + " damage to the monster!");
+                    System.out.println("You received " + monster.getDamage() + " damage from the monster!");
                     System.out.println("Hero HP: " + hero.getHp());
 
                     if (monster.isDead()) {
-                        System.out.println("몬스터 처치!");
+                        System.out.println("Monster defeated!");
                         grid[newRow][newCol] = " ";
                         if (monster instanceof Troll) {
-                            System.out.println("Troll이 열쇠를 떨어뜨렸습니다!");
+                            System.out.println("The Troll dropped a key!");
                             hero.obtainKey();
                         }
                     } else {
-                        grid[newRow][newCol] = target.split(":")[0] + ":" + monster.getHp();  // 예: G:2
-                        System.out.println("몬스터가 살아남았습니다. 남은 HP: " + monster.getHp());
+                        grid[newRow][newCol] = target.split(":")[0] + ":" + monster.getHp();
+                        System.out.println("The monster survived. Remaining HP: " + monster.getHp());
                     }
                 }
-                return;  // 한 마리만 공격 가능, 한 번만 처리
+                return;
             }
         }
 
-        System.out.println("주변에 공격할 몬스터가 없습니다.");
+        System.out.println("No monsters to attack nearby.");
     }
-
-
 }
-

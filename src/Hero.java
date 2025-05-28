@@ -21,7 +21,7 @@ public class Hero {
     public boolean hasKey() { return hasKey; }
     public void obtainKey() { this.hasKey = true; }
 
-    // 포션 회복용
+    // Used for potion healing
     public void heal(int amount) {
         hp = Math.min(maxHp, hp + amount);
     }
@@ -30,7 +30,7 @@ public class Hero {
         hp -= dmg;
         if (hp <= 0) {
             hp = 0;
-            System.out.println("당신은 쓰러졌습니다. 게임 오버.");
+            System.out.println("You have fallen. Game over.");
             System.exit(0);
         }
     }
